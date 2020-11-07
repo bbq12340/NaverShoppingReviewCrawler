@@ -7,5 +7,5 @@ How the program works
   - saves links to 'output/input.csv'
   - saves keywords with no result to 'output/none_keyword.txt'
 3. scrapes list of reviews from each links
-  - saves links to 'output/data/{file_name}.csv'
+  - saves reviews to 'output/data/{file_name}.csv'
   *file_name is named by the item name. Special characters are replaced to '' by 're' module.
