@@ -13,7 +13,7 @@ class Reader:
         self.filename = filename
         self.limit = limit
         self.delay_time = delay_time
-        self.target_variable = ['평점', '아이디', '구매날짜', '구매한옵션', '리뷰내용']
+        self.target_variable = ['평점', '아이디', '구매날짜', '구매한옵션', '리뷰내용', '스토어링크']
         self.read_input_file()
         self.extract_file()
 
@@ -23,12 +23,12 @@ class Reader:
         C = []
         with open('output/input.csv', 'w') as f:
             f.write('')
-        with open(self.filename, 'r') as f:
+        with open(self.filename, 'r', encoding='utf-8-sig') as f:
             query_list = f.readlines()
         for i in trange(0, len(query_list)):
             q = query_list[i]
             q = q.replace('\n','')
-            app = Application(q)
+            app = Application(q, self.delay_time)
             data = {
                 '키워드': q,
                 '링크 수': app.start_process()
@@ -39,28 +39,33 @@ class Reader:
         print(f"총 링크 수:{sum(result['링크 수'])}")
 
         # 링크 수집 시작
-        request_df = pd.read_csv('output/input.csv', names=['names','link'])
+        request_df = pd.read_csv('output/input.csv', names=['keyword','names','link'])
         request_df = request_df.set_index('names')
         request_df.index = request_df.index + request_df.groupby(level=0).cumcount().astype(str).replace('0','')
         request_df.to_csv('output/wd.csv', encoding='utf-8-sig', header=False)
+        
 
     def extract_file(self):
-        df = pd.read_csv('output/wd.csv', encoding='utf-8-sig', names=['names', 'link'])
+        df = pd.read_csv('output/wd.csv', encoding='utf-8-sig', names=['names', 'keyword', 'link'])
         for i in range(len(df.index)):
             if self.stop_thread.is_set():
                 print("program forced to stop!\n")      
                 break
             else:
-                file_name = list(df['names'])[i]
+                keyword = list(df['keyword'])[i]
+                file_name = keyword+"_"+list(df['names'])[i]
                 store_link = list(df['link'])[i]
 
-                print(f"###################{file_name} 수집 시작###################")
+                print(f"###################'{file_name}' 수집 시작###################")
 
                 app = SmartStoreReviewScraper()
                 REVIEWS = app.scraped_reviews
 
                 store_data = app.get_store_data(store_link) #스토어 정보 
-                json_review = app.get_review_json(store_data['merchant_no'], store_data['product_no'], 1) #리뷰 정보 리퀘스트 
+                try:
+                    json_review = app.get_review_json(store_data['merchant_no'], store_data['product_no'], 1) #리뷰 정보 리퀘스트 
+                except TypeError:
+                    continue
                 
                 review_data = app.get_review_data(json_review) #해당 아이템 리뷰 (총 아이템수 + 총 페이지수) 정보 
                 total_element = review_data['totalElements'] #총 아이템수

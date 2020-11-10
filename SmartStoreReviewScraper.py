@@ -1,4 +1,4 @@
-import requests, bs4
+import requests
 from bs4 import BeautifulSoup
 import json, re
 
@@ -6,8 +6,7 @@ class SmartStoreReviewScraper:
 
     def __init__(self):
         self.user_agent = {
-            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36',
-            'accept-language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36'
         }
         self.API_url = 'https://smartstore.naver.com/i/v1/reviews/paged-reviews'
         self.scraped_reviews = []
@@ -29,8 +28,10 @@ class SmartStoreReviewScraper:
             }
         else:
             print("네트워크 에러 발생-------------------스토어 링크 확인 필요")
-            with open('output/bug_report.txt', 'a') as f:
+            print(link)
+            with open('output/bug_report.txt', 'a', encoding='utf-8-sig') as f:
                 f.write(f"스토어 사이트 에러\t{link}\n")
+            return
         return data
     
     def get_review_json(self, merchant_no, product_no, page):
@@ -43,12 +44,14 @@ class SmartStoreReviewScraper:
         }
         r = requests.get(self.API_url, params=payload, headers=self.user_agent)
         if r.status_code == 200:
-            json = r.json(encoding='utf-8')
+            data = r.json(encoding='utf-8')
         else:
             print(f"네트워크 에러 발생-------------------페이지 {page} 확인 필요.")
             with open('output/bug_report.txt', 'a') as f:
                 f.write(f"리뷰 페이지 에러\t{r.url}\n")
-        return json
+        # with open(f'{merchant_no}.json', 'w', encoding='utf-8-sig') as f:
+        #     f.write(json.dumps(data, indent=4, sort_keys=True, ensure_ascii=False))
+        return data
     
     def get_review_content(self, review):
         content = review['contents']
@@ -69,11 +72,12 @@ class SmartStoreReviewScraper:
                     '평점': review['reviewScore'], #평점
                     '아이디': review['writerMemberId'], #아이디
                     '구매날짜': review['createDate'].replace('T', ' ').split('.')[0], #구매날짜   
-                    '리뷰내용': review['reviewContent'].replace(',',' ').replace('~',' ').replace('\n',' ') #리뷰내용
+                    '리뷰내용': review['reviewContent'].replace(',',' ').replace('~',' ').replace('\n',' '), #리뷰내용
                 }
             if 'productOptionContent' in review:
                 data['구매한옵션'] = review['productOptionContent'].replace(',',' ') #구매한옵션            
             else:
                 data['구매한옵션'] = None
+            data['스토어링크'] = review['productUrl']
             REVIEWS.append(data)
         return REVIEWS

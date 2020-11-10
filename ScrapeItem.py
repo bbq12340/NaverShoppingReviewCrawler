@@ -11,9 +11,9 @@ class NaverShoppingScraper:
         self.scraped_items = []
         self.scraped_malls = []
 
-    def get_query_link(self, page, query):
+    def get_query_link(self, page, query, sort_option):
         payloads = {
-            "sort": "review",
+            "sort": sort_option,
             "origQuery": query,
             "pagingIndex": page,
             "pagingSize": 80,
@@ -29,6 +29,8 @@ class NaverShoppingScraper:
         r = requests.get(link, headers=self.user_agent)
         soup = BeautifulSoup(r.text,'html.parser').find('script', {'id': "__NEXT_DATA__"}).string
         json_data = json.loads(soup)
+        # with open('j.json' ,'w', encoding='utf-8-sig') as f:
+        #     f.write(json.dumps(json_data, indent=4, sort_keys=True, ensure_ascii=False))
         return json_data
     
     def get_item_info(self, data):
@@ -39,7 +41,8 @@ class NaverShoppingScraper:
                 '상품명': item['productName'],
                 '리뷰수': int(item['reviewCount']),
                 '링크': item['mallProductUrl'],
-                '날짜': datetime.strptime(item['openDate'][:-6], '%Y%m%d').date()
+                '날짜': datetime.strptime(item['openDate'][:-6], '%Y%m%d').date(),
+                '쇼핑몰명': item['mallName']
             }
             self.scraped_items.append(output)
         return self.scraped_items
