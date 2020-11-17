@@ -34,18 +34,22 @@ class NaverShoppingScraper:
         return json_data
     
     def get_item_info(self, data):
+        result=[]
         product_list = data['props']['pageProps']['initialState']['products']['list']
         for product in product_list:
             item = product['item']
-            output = {
-                '상품명': item['productName'],
-                '리뷰수': int(item['reviewCount']),
-                '링크': item['mallProductUrl'],
-                '날짜': datetime.strptime(item['openDate'][:-6], '%Y%m%d').date(),
-                '쇼핑몰명': item['mallName']
-            }
-            self.scraped_items.append(output)
-        return self.scraped_items
+            try:
+                output = {
+                    '상품명': item['productName'],
+                    '리뷰수': int(item['reviewCount']),
+                    '링크': item['mallProductUrl'],
+                    '날짜': datetime.strptime(item['openDate'][:-6], '%Y%m%d').date(),
+                    '쇼핑몰명': item['mallName']
+                }
+                result.append(output)
+            except KeyError:
+                pass
+        return result
     
     def get_mall_info(self, data):
         product_list = data['props']['pageProps']['initialState']['products']['list']

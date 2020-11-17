@@ -13,7 +13,7 @@ class Reader:
         self.filename = filename
         self.limit = limit
         self.delay_time = delay_time
-        self.target_variable = ['평점', '아이디', '구매날짜', '구매한옵션', '리뷰내용', '스토어링크']
+        self.target_variable = ['평점', '아이디', '구매날짜', '구매한옵션', '리뷰내용']
         self.read_input_file()
         self.extract_file()
 
@@ -76,14 +76,14 @@ class Reader:
                 app.scrape_review_contents(REVIEWS, review_content) #첫 페이지 크롤링
 
                 if self.limit >= total_element or self.limit == 0:
-                    self.start_scraper(app, REVIEWS, total_element, total_pages, store_data, file_name)
+                    self.start_scraper(app, REVIEWS, total_element, total_pages, store_data, file_name, store_link)
                 else:
-                    self.start_scraper(app, REVIEWS, self.limit, total_pages, store_data, file_name)   
+                    self.start_scraper(app, REVIEWS, self.limit, total_pages, store_data, file_name, store_link)   
         return
                     
                 
 
-    def start_scraper(self, app, REVIEWS, LIMIT, PAGES, store_data, file_name):
+    def start_scraper(self, app, REVIEWS, LIMIT, PAGES, store_data, file_name, store_link):
         print('목표 데이터 양:'+str(LIMIT)) 
 
         DF = pd.DataFrame([], columns=self.target_variable)
@@ -103,8 +103,9 @@ class Reader:
             DF = DF.append(row, ignore_index=True)
 
         DF.insert(0, column='번호', value=DF.index+1)
-        print("<데이터 프레임 샘플>")
-        print(DF.head())
+        DF[f"{store_link}"]=""
+        # print("<데이터 프레임 샘플>")
+        # print(DF.head())
         print('데이터 수집 완료! 크롤링된 아이템 수:'+str(len(DF))+'\n')
-        file_name = re.sub('[-=.#/?:$]','',file_name)
+        file_name = re.sub('[-=.#/?:$]','',file_name).replace(' ','')
         DF.to_csv(f'output/data/{file_name}.csv', encoding='utf-8-sig', index=False)

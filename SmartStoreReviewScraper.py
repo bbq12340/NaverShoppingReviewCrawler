@@ -78,6 +78,6 @@ class SmartStoreReviewScraper:
                 data['구매한옵션'] = review['productOptionContent'].replace(',',' ') #구매한옵션            
             else:
                 data['구매한옵션'] = None
-            data['스토어링크'] = review['productUrl']
+            data[f'{review["productUrl"]}'] = ""
             REVIEWS.append(data)
         return REVIEWS
